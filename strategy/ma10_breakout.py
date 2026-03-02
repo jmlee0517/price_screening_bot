@@ -17,7 +17,7 @@ def check_breakout(symbol, daily_df, threshold):
 
     difference = latest_close - latest_ma10
 
-    if difference >= threshold:
+    if 0 < difference <= threshold:
         return {
             "symbol": symbol,
             "close": latest_close,
