@@ -5,37 +5,40 @@ from data.fetcher import get_stock_list, get_price_data
 from strategy.ma10_breakout import check_breakout
 
 def main():
-    print("Starting MA10 Breakout Scanner...")
+    print("Starting MA10 + Volume + Price Filter Scanner...")
 
-    # Load stock listings from local CSV
     stock_df = get_stock_list()
 
-    breakout_stocks = []
+    found_signal = False
 
-    # Loop through all stocks
+    signal_count = 0
+
     for _, row in stock_df.iterrows():
-        symbol = str(row['Code']).zfill(6)  # Ensure 6-digit code
+        symbol = str(row['Code']).zfill(6)
         name = row['Name']
 
         try:
-            # Fetch price data
             price_df = get_price_data(symbol)
-            
-            # Check breakout
             result = check_breakout(symbol, price_df, THRESHOLD_WON)
 
             if result:
-                result["name"] = name
-                breakout_stocks.append(result)
-                print(f"BUY SIGNAL: {name} ({symbol}) | Close: {result['close']} | MA10: {result['ma10']} | Diff: {result['difference']}")
+                signal_count += 1
+
+                print(
+                    f"BUY SIGNAL: {name} ({symbol}) | "
+                    f"Close: {result['close']} | "
+                    f"MA10: {result['ma10']} | "
+                    f"Diff: {result['difference']:.2f} | "
+                    f"Volume: {result['volume']:,}"
+                )
 
         except Exception as e:
             print(f"Error processing {symbol} ({name}): {e}")
 
-    # Final summary
-    print("\n=== FINAL BREAKOUT LIST ===")
-    for stock in breakout_stocks:
-        print(f"{stock['name']} ({stock['symbol']}): Close={stock['close']}, MA10={stock['ma10']}, Diff={stock['difference']}")
+    if signal_count == 0:
+        print("No stocks found matching the criteria.")
+    else:
+        print(f"\nTotal signals found: {signal_count}")
 
 if __name__ == "__main__":
     main()
