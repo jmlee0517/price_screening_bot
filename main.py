@@ -16,10 +16,11 @@ def main():
     for _, row in stock_df.iterrows():
         symbol = str(row['Code']).zfill(6)
         name = row['Name']
+        market_cap = int(str(row['MarketCap']).replace(",", ""))
 
         try:
             price_df = get_price_data(symbol)
-            result = check_breakout(symbol, price_df, THRESHOLD_WON)
+            result = check_breakout(symbol, price_df, market_cap, THRESHOLD_WON)
 
             if result:
                 signal_count += 1

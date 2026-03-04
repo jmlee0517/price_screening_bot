@@ -1,4 +1,4 @@
-def check_breakout(symbol, daily_df, threshold):
+def check_breakout(symbol, daily_df, market_cap, threshold):
     """
     MA10 Breakout + Volume + Price Range Filter
     """
@@ -24,14 +24,16 @@ def check_breakout(symbol, daily_df, threshold):
     if (
         0 < difference <= threshold and
         latest_volume >= 1_000_000 and
-        2000 < latest_close < 100000
+        2000 < latest_close < 150000 and
+        market_cap >= 2_000_000_000_000
     ):
         return {
             "symbol": symbol,
             "close": latest_close,
             "ma10": latest_ma10,
             "volume": latest_volume,
-            "difference": difference
+            "difference": difference,
+            "market_cap": market_cap
         }
 
     return None
