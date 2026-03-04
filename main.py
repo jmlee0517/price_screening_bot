@@ -1,34 +1,68 @@
-from config.settings import THRESHOLD_WON, MARKET_LIST
-from data.fetcher import get_stock_list, get_price_data
+# main.py
+import os
+import pandas as pd
+from datetime import datetime
+from config.settings import INCLUDE_KRX, INCLUDE_ETF
+
+from data.fetcher import get_universe, get_price_data
 from strategy.ma10_breakout import check_breakout
 
 def main():
-    print("Starting MA10 Breakout Scanner...")
+    buySignals = []
+    print("Starting MA10 + Volume + Price Filter Scanner...")
 
-    stock_df = get_stock_list()
+    universe_df = get_universe(
+        include_krx=INCLUDE_KRX,
+        include_etf=INCLUDE_ETF
+    )
 
-    breakout_stocks = []
+    print(f"Scanning {len(universe_df)} instruments...")
 
-    for _, row in stock_df.iterrows():
-            symbol = row['Code']
-            name = row['Name']
+    for _, row in universe_df.iterrows():
+        symbol = str(row['Code']).zfill(6)
+        name = row['Name']
+        market_cap = int(str(row['MarketCap']).replace(",", ""))
 
-            try:
-                price_df = get_price_data(symbol)
-                result = check_breakout(symbol, price_df, THRESHOLD_WON)
+        try:
+            price_df = get_price_data(symbol)
+            result = check_breakout(symbol, price_df, market_cap)
 
-                if result:
-                    result["name"] = name
-                    breakout_stocks.append(result)
-                    print(f"BUY SIGNAL: {name} ({symbol})")
+            if result:
+                buySignals.append({
+                    "Name": name,
+                    "Symbol": symbol,
+                    "Close": result["close"],
+                    "MA10": result["ma10"],
+                    "Difference": result["difference"],
+                    "Volume": result["volume"],
+                    "MarketCap": result["market_cap"]
+                })
 
-            except Exception as e:
-                print(f"Error processing {symbol}: {e}")
+                print(
+                    f"BUY SIGNAL: {name} ({symbol}) | "
+                    f"Close: {result['close']} | "
+                    f"MA10: {result['ma10']} | "
+                    f"Diff: {result['difference']:.2f} | "
+                    f"Volume: {result['volume']:,}"
+                )
 
-    print("\n=== FINAL RESULT ===")
-    for stock in breakout_stocks:
-        print(stock)
+        except Exception as e:
+            print(f"Error processing {symbol} ({name}): {e}")
 
+    if not buySignals:
+        print("No stocks found matching the criteria.")
+    else:
+        df_buySignals = pd.DataFrame(buySignals)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        filename = f"screened_results_{timestamp}.csv"
+
+        output_path = os.path.join(base_dir, "results", filename)
+        
+        df_buySignals.to_csv(output_path, index=False)
+
+        print(f"\nTotal Signals Found: {len(buySignals)}")
+        print("Results saved to the results folder.")
 
 if __name__ == "__main__":
     main()
