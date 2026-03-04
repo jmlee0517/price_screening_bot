@@ -5,6 +5,7 @@ This project scans KRX stocks and ETFs using a 10-Month Moving Average breakout 
 
 🚀 **Strategy Overview**
 The scanner identifies instruments that satisfy:
+
 1️⃣ MA10 Breakout
 	•	Latest closing price is above the 10-month moving average.
 	•	Breakout threshold configurable (THRESHOLD_WON).
