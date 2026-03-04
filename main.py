@@ -2,26 +2,30 @@
 import os
 import pandas as pd
 from datetime import datetime
-from config.settings import THRESHOLD_WON
-from data.fetcher import get_stock_list, get_price_data
+from config.settings import INCLUDE_KRX, INCLUDE_ETF
+
+from data.fetcher import get_universe, get_price_data
 from strategy.ma10_breakout import check_breakout
 
 def main():
     buySignals = []
     print("Starting MA10 + Volume + Price Filter Scanner...")
 
-    stock_df = get_stock_list()
+    universe_df = get_universe(
+        include_krx=INCLUDE_KRX,
+        include_etf=INCLUDE_ETF
+    )
 
-    found_signal = False
+    print(f"Scanning {len(universe_df)} instruments...")
 
-    for _, row in stock_df.iterrows():
+    for _, row in universe_df.iterrows():
         symbol = str(row['Code']).zfill(6)
         name = row['Name']
         market_cap = int(str(row['MarketCap']).replace(",", ""))
 
         try:
             price_df = get_price_data(symbol)
-            result = check_breakout(symbol, price_df, market_cap, THRESHOLD_WON)
+            result = check_breakout(symbol, price_df, market_cap)
 
             if result:
                 buySignals.append({

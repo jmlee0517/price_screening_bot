@@ -1,6 +1,14 @@
-def check_breakout(symbol, daily_df, market_cap, threshold):
+from config.settings import (
+    THRESHOLD_WON,
+    MIN_VOLUME,
+    MIN_PRICE,
+    MAX_PRICE,
+    MIN_MARKET_CAP
+)
+
+def check_breakout(symbol, daily_df, market_cap):
     """
-    MA10 Breakout + Volume + Price Range Filter
+    MA10 Breakout + Volume + Price Range + Market Cap Filter
     """
 
     from indicators.moving_average import calculate_10_month_ma
@@ -22,10 +30,10 @@ def check_breakout(symbol, daily_df, market_cap, threshold):
 
     # --- Filters ---
     if (
-        0 < difference <= threshold and
-        latest_volume >= 1_000_000 and
-        2000 < latest_close < 150000 and
-        market_cap >= 2_000_000_000_000
+        0 < difference <= THRESHOLD_WON and
+        latest_volume >= MIN_VOLUME and
+        MIN_PRICE < latest_close < MAX_PRICE and
+        market_cap >= MIN_MARKET_CAP
     ):
         return {
             "symbol": symbol,
